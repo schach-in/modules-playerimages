@@ -19,7 +19,7 @@ function mod_playerimages_make_playertag() {
 	global $zz_setting;
 
 	$locked = wrap_lock('playerimages_tag', 'sequential', wrap_get_setting('playerimages_max_run_sec') + 20);
-	if ($locked) return false;
+	if ($locked) return wrap_quit(403, wrap_text('Player tagging is running.'));
 
 	require_once $zz_setting['lib'].'/php-qrcode-detector-decoder/lib/Common/customFunctions.php';
 	require_once $zz_setting['lib'].'/php-qrcode-detector-decoder/lib/Common/DetectorResult.php';
@@ -67,12 +67,17 @@ function mod_playerimages_make_playertag() {
 	require_once $zz_setting['lib'].'/php-qrcode-detector-decoder/lib/Qrcode/QRCodeReader.php';
 	require_once $zz_setting['lib'].'/php-qrcode-detector-decoder/lib/QrReader.php';
 
-	$input_folder = $zz_setting['cms_dir'].wrap_get_setting('playerimages_incoming_path');
-	$final_folder = $zz_setting['cms_dir'].wrap_get_setting('playerimages_final_path');
-	$error_folder = $zz_setting['cms_dir'].wrap_get_setting('playerimages_error_path');
+	$folders['input'] = $zz_setting['cms_dir'].wrap_get_setting('playerimages_incoming_path');
+	$folders['final'] = $zz_setting['cms_dir'].wrap_get_setting('playerimages_final_path');
+	$folders['error'] = $zz_setting['cms_dir'].wrap_get_setting('playerimages_error_path');
+	foreach ($folders as $index => $folder)
+	if (!is_dir($folder)) {
+		wrap_unlock('playerimages_tag');
+		wrap_error(sprintf('%s folder %s does not exist', ucfirst($key), $folder), E_USER_ERROR);
+	}
 
 	$i = 1;
-	foreach (scandir($input_folder) as $image) {
+	foreach (scandir($folders['input']) as $image) {
 		if($image == '.' || $image == '..') continue;
 
 		$i++;
@@ -83,36 +88,36 @@ function mod_playerimages_make_playertag() {
 			continue;
 		}
 		// Falls Dateigröße über 1MB ist wird das Bild verkleinert
-		if (filesize($input_folder.'/'.$face_image) > 1000000){
-			$imagick = new Imagick(realpath($input_folder.'/'.$face_image));
+		if (filesize($folders['input'].'/'.$face_image) > 1000000){
+			$imagick = new Imagick(realpath($folders['input'].'/'.$face_image));
 			$imagick->scaleImage(1000, 1000, 1);
-			$imagick->writeImage($input_folder.'/'.$face_image);
+			$imagick->writeImage($folders['input'].'/'.$face_image);
 		}
 
 		try {
-			$qrcode = new \Zxing\QrReader($input_folder.'/'.$face_image);
+			$qrcode = new \Zxing\QrReader($folders['input'].'/'.$face_image);
 			$text_array = explode("/", $qrcode->text());
 			$participation_id = array_pop($text_array);
 
 			if ($participation_id != '') {
 				// Wenn ein QR-Code erkannt wurde, wird das Bild umbenannt und in final gespeichert
-				rename($input_folder.'/'.$image, $final_folder.$image);
-				chown($final_folder.$image, wrap_get_setting('playerimages_server_user'));
-				chgrp($final_folder.$image, wrap_get_setting('playerimages_server_group'));
-				chmod($final_folder.$image, 0775);
+				rename($folders['input'].'/'.$image, $folders['final'].'/'.$image);
+				chown($folders['final'].'/'.$image, wrap_get_setting('playerimages_server_user'));
+				chgrp($folders['final'].'/'.$image, wrap_get_setting('playerimages_server_group'));
+				chmod($folders['final'].'/'.$image, 0775);
 				// Setzt die Teilnahme-Nummer in die Meta-Daten
-				mf_playerimages_set_iptc($final_folder.$image, "participation_id=".$participation_id);
-				unlink($input_folder.'/'.$face_image);
+				mf_playerimages_set_iptc($folders['final'].'/'.$image, "participation_id=".$participation_id);
+				unlink($folders['input'].'/'.$face_image);
 			} else {
 				// Wenn kein QR-Code erkannt wurde, werden die Bilder in error/ verschoben
-				rename($input_folder.'/'.$face_image, $error_folder.$face_image);
-				rename($input_folder.'/'.$image, $error_folder.$image);
+				rename($folders['input'].'/'.$face_image, $folders['error'].'/'.$face_image);
+				rename($folders['input'].'/'.$image, $folders['error'].'/'.$image);
 			}
 			unset($qrcode);
 		} catch(Exception $e) {
 			// falls eine Exception passiert, wird das Bild in error/ verschoben
-			rename($input_folder.'/'.$face_image, $error_folder.$face_image);
-			rename($input_folder.'/'.$image, $error_folder.$image);
+			rename($folders['input'].'/'.$face_image, $folders['error'].'/'.$face_image);
+			rename($folders['input'].'/'.$image, $folders['error'].'/'.$image);
 			unset($qrcode);
 		}
 	}
