@@ -87,8 +87,8 @@ function mod_playerimages_make_playertag() {
 			$face_image = $image;
 			continue;
 		}
-		// Falls Dateigröße über 1MB ist wird das Bild verkleinert
-		if (filesize($folders['input'].'/'.$face_image) > 1000000){
+		// Falls Dateigröße über n ist wird das Bild verkleinert
+		if (filesize($folders['input'].'/'.$face_image) > wrap_get_setting('playerimages_shrink_above_bytes')){
 			$imagick = new Imagick(realpath($folders['input'].'/'.$face_image));
 			$imagick->scaleImage(1000, 1000, 1);
 			$imagick->writeImage($folders['input'].'/'.$face_image);
@@ -101,6 +101,7 @@ function mod_playerimages_make_playertag() {
 
 			if ($participation_id != '') {
 				// Wenn ein QR-Code erkannt wurde, wird das Bild umbenannt und in final gespeichert
+				wrap_log(sprintf('Match found: face %s, code %s = ID %d', $face_image, $image, $participation_id));
 				rename($folders['input'].'/'.$image, $folders['final'].'/'.$image);
 				chown($folders['final'].'/'.$image, wrap_get_setting('playerimages_server_user'));
 				chgrp($folders['final'].'/'.$image, wrap_get_setting('playerimages_server_group'));
@@ -110,19 +111,21 @@ function mod_playerimages_make_playertag() {
 				unlink($folders['input'].'/'.$face_image);
 			} else {
 				// Wenn kein QR-Code erkannt wurde, werden die Bilder in error/ verschoben
+				wrap_log(sprintf('No QR-Code found: face %s, code %s', $face_image, $image));
 				rename($folders['input'].'/'.$face_image, $folders['error'].'/'.$face_image);
 				rename($folders['input'].'/'.$image, $folders['error'].'/'.$image);
 			}
 			unset($qrcode);
 		} catch(Exception $e) {
 			// falls eine Exception passiert, wird das Bild in error/ verschoben
+			wrap_log(sprintf('An exception stopped from processing: face %s, code %s', $face_image, $image));
 			rename($folders['input'].'/'.$face_image, $folders['error'].'/'.$face_image);
 			rename($folders['input'].'/'.$image, $folders['error'].'/'.$image);
 			unset($qrcode);
 		}
 	}
 
-	$page['text'] = 'success';
+	$page['text'] = 'success<br><br>'.nl2br(file_get_contents($zz_setting['log_dir'].'/playerimages.log'));
 
 	wrap_unlock('playerimages_tag');
 	return $page;
