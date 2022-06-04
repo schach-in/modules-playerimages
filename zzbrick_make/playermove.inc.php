@@ -105,6 +105,7 @@ function mod_playerimages_make_playermove() {
 		$values['GET']['where']['category_id'] = wrap_id('categories', 'photo');
 		$values['FILES']['field_uploaded_files_0_image']['name']['file'] = $file['filename_short'];
 		$values['FILES']['field_uploaded_files_0_image']['tmp_name']['file'] = $file['filename_full'];
+		$values['FILES']['field_uploaded_files_0_image']['do_not_delete']['file'] = true;
 		$values['POST']['path'] = $file['filename'];
 		$values['POST']['objects-Title'][0]['title'] = $file['filename'];
 		$values['POST']['objectrelations'][0]['parent_object_id'] = $parent_object_id;
