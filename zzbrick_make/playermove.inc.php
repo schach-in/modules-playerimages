@@ -17,12 +17,12 @@ function mod_playerimages_make_playermove() {
 	global $zz_conf;
 	
 	$locked = wrap_lock('playerimages_move', 'sequential', wrap_get_setting('playerimages_max_run_sec') + 20);
-	if ($locked) return false;
+	if ($locked) return wrap_quit(403, wrap_text('Player images moving is running.'));
 	
 	$page['text'] = 'success';
 	$source_folder = wrap_get_setting('playerimages_final_path');
 	
-	wrap_collect_files('zzbrick_request/object', 'mediadb');
+	wrap_include_files('zzbrick_request/object', 'mediadb');
 	require_once $zz_conf['dir'].'/zzform.php';
 
 	$zz_setting['import_user'] = true; // allow addition also for public users
