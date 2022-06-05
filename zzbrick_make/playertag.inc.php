@@ -18,6 +18,8 @@
 function mod_playerimages_make_playertag() {
 	global $zz_setting;
 
+	ini_set('max_execution_time', wrap_get_setting('playerimages_max_run_sec') + 20);
+
 	$locked = wrap_lock('playerimages_tag', 'sequential', wrap_get_setting('playerimages_max_run_sec') + 20);
 	if ($locked) return wrap_quit(403, wrap_text('Player tagging is running.'));
 
