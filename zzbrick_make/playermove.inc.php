@@ -19,9 +19,11 @@ function mod_playerimages_make_playermove() {
 	$locked = wrap_lock('playerimages_move', 'sequential', wrap_get_setting('playerimages_max_run_sec') + 20);
 	if ($locked) return wrap_quit(403, wrap_text('Player images moving is running.'));
 	
+	wrap_module_activate('mediadb');
 	$page['text'] = 'success';
 	$source_folder = wrap_get_setting('playerimages_final_path');
 	
+	wrap_include_files('zzform/hooks', 'mediadb'); // different module!
 	wrap_include_files('zzbrick_request/object', 'mediadb');
 	require_once $zz_conf['dir'].'/zzform.php';
 
@@ -157,7 +159,7 @@ function mod_playerimages_make_playermove() {
 		$values['POST']['tag_id'] = wrap_get_setting('playerimages_tag_id');
 		$myops = zzform_multi('objects-tags', $values);
 		if (empty($myops['id'])) {
-			wrap_error(wrap_text('Could not link photo to website').': ID '.$ops['id'].' – File '
+			wrap_error(wrap_text('Could not link photo to tag').': ID '.$ops['id'].' – File '
 				.$file['filename_short'].' – Values: '.json_encode($values).' – Error: '.json_encode($myops), E_USER_WARNING
 			);
 			wrap_unlock('playerimages_move');
@@ -203,7 +205,7 @@ function mod_playerimages_make_playermove_element($identifier) {
 
 	$sql = 'SELECT object_id
 		FROM objects
-		WHERE identifier = "%s/"';
+		WHERE identifier = "%s/%s"';
 	$sql = sprintf($sql, $identifier, wrap_get_setting('playerimages_path'));
 	$object_id[$identifier] = wrap_db_fetch($sql, '', 'single value');
 	return $object_id[$identifier];
