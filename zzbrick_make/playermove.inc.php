@@ -19,7 +19,7 @@ function mod_playerimages_make_playermove() {
 	$locked = wrap_lock('playerimages_move', 'sequential', wrap_get_setting('playerimages_max_run_sec') + 20);
 	if ($locked) return wrap_quit(403, wrap_text('Player images moving is running.'));
 	
-	wrap_module_activate('mediadb');
+	wrap_package_activate('mediadb');
 	$page['text'] = 'success';
 	$source_folder = wrap_get_setting('playerimages_final_path');
 	
