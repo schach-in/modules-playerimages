@@ -62,6 +62,7 @@ function mod_playerimages_make_playermove() {
 			, IFNULL(main_events.event_id, events.event_id) AS event_id
 			, CONCAT(UPPER(contact_abbr), "/", IFNULL(main_events.identifier, events.identifier)) AS event_identifier
 		FROM participations
+		LEFT JOIN persons USING (contact_id)
 		LEFT JOIN events USING (event_id)
 		LEFT JOIN categories series
 			ON events.series_category_id = series.category_id
@@ -70,7 +71,8 @@ function mod_playerimages_make_playermove() {
 			AND IFNULL(events.event_year, YEAR(events.date_begin)) = IFNULL(main_events.event_year, YEAR(main_events.date_begin))
 		LEFT JOIN websites
 			ON websites.website_id = IFNULL(main_events.website_id, events.website_id)
-		LEFT JOIN contacts USING (contact_id)
+		LEFT JOIN contacts
+			ON websites.contact_id = contacts.contact_id
 		WHERE participation_id IN (%s)';
 	$sql = sprintf($sql, implode(',', $participation_ids));
 	$participations = wrap_db_fetch($sql, 'participation_id');
