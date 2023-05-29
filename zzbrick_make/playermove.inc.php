@@ -8,29 +8,25 @@
  * https://www.zugzwang.org/modules/playerimages
  *
  * @author Gustaf Mossakowski <gustaf@koenige.org>
- * @copyright Copyright © 2020-2022 Gustaf Mossakowski
+ * @copyright Copyright © 2020-2023 Gustaf Mossakowski
  * @license http://opensource.org/licenses/lgpl-3.0.html LGPL-3.0
  */
 
 function mod_playerimages_make_playermove() {
-	global $zz_setting;
-	global $zz_conf;
-	
-	$locked = wrap_lock('playerimages_move', 'sequential', wrap_get_setting('playerimages_max_run_sec') + 20);
+	$locked = wrap_lock('playerimages_move', 'sequential', wrap_setting('playerimages_max_run_sec') + 20);
 	if ($locked) return wrap_quit(403, wrap_text('Player images moving is running.'));
 	
 	wrap_package_activate('mediadb');
 	$page['text'] = 'success';
-	$source_folder = wrap_get_setting('playerimages_final_path');
+	$source_folder = wrap_setting('playerimages_final_path');
 	
 	wrap_include_files('zzform/hooks', 'mediadb'); // different module!
 	wrap_include_files('zzbrick_request/object', 'mediadb');
-	require_once $zz_conf['dir'].'/zzform.php';
 
-	$zz_setting['import_user'] = true; // allow addition also for public users
+	wrap_setting('import_user', true); // allow addition also for public users
 	
 	// 1. read file per file in folder
-	$folder = $zz_setting['cms_dir'].$source_folder;
+	$folder = wrap_setting('cms_dir').$source_folder;
 	$files = scandir($folder);
 	$data = [];
 	$participation_ids = [];
@@ -78,12 +74,11 @@ function mod_playerimages_make_playermove() {
 		WHERE participation_id IN (%s)';
 	$sql = sprintf($sql, implode(',', $participation_ids));
 	$participations = wrap_db_fetch($sql, 'participation_id');
-	mysqli_close($zz_conf['db_connection']);
-	$zz_conf['db_connection'] = false;
+	wrap_db_connection(false);
 	wrap_db_connect();
 	
 	foreach ($data as $file) {
-		if (time() > $_SERVER['REQUEST_TIME'] + wrap_get_setting('playerimages_max_run_sec')) {
+		if (time() > $_SERVER['REQUEST_TIME'] + wrap_setting('playerimages_max_run_sec')) {
 			wrap_unlock('playerimages_move');
 			return $page;
 		}
@@ -156,7 +151,7 @@ function mod_playerimages_make_playermove() {
 		$values['action'] = 'insert';
 		$values['ids'] = ['object_id', 'tag_id'];
 		$values['POST']['object_id'] = $ops['id'];
-		$values['POST']['tag_id'] = wrap_get_setting('playerimages_tag_id');
+		$values['POST']['tag_id'] = wrap_setting('playerimages_tag_id');
 		$myops = zzform_multi('objects-tags', $values);
 		if (empty($myops['id'])) {
 			wrap_error(wrap_text('Could not link photo to tag').': ID '.$ops['id'].' – File '
@@ -166,7 +161,7 @@ function mod_playerimages_make_playermove() {
 			return false;
 		}
 	}
-	$zz_setting['import_user'] = false;
+	wrap_setting('import_user', false);
 	wrap_unlock('playerimages_move');
 	return $page;
 }
@@ -187,7 +182,7 @@ function mod_playerimages_make_playermove_dates($event_id) {
 		AND foreign_source_id = %d';
 	$sql = sprintf($sql
 		, $event_id
-		, wrap_get_setting('playerimages_foreign_source_id_days')
+		, wrap_setting('playerimages_foreign_source_id_days')
 	);
 	$dates[$event_id] = wrap_db_fetch($sql, 'object_id', 'key/value');
 	return $dates[$event_id];
@@ -206,7 +201,7 @@ function mod_playerimages_make_playermove_element($identifier) {
 	$sql = 'SELECT object_id
 		FROM objects
 		WHERE identifier = "%s/%s"';
-	$sql = sprintf($sql, $identifier, wrap_get_setting('playerimages_path'));
+	$sql = sprintf($sql, $identifier, wrap_setting('playerimages_path'));
 	$object_id[$identifier] = wrap_db_fetch($sql, '', 'single value');
 	return $object_id[$identifier];
 }
@@ -227,7 +222,7 @@ function mod_playerimages_make_playermove_description($person_id) {
 		AND foreign_source_id = %d';
 	$sql = sprintf($sql
 		, $person_id
-		, wrap_get_setting('playerimages_foreign_source_id_persons')
+		, wrap_setting('playerimages_foreign_source_id_persons')
 	);
 	$object_id[$person_id] = wrap_db_fetch($sql, '', 'single value');
 	return $object_id[$person_id];

@@ -8,7 +8,7 @@
  * https://www.zugzwang.org/modules/playerimages
  *
  * @author Gustaf Mossakowski <gustaf@koenige.org>
- * @copyright Copyright © 2020-2022 Gustaf Mossakowski
+ * @copyright Copyright © 2020-2023 Gustaf Mossakowski
  * @license http://opensource.org/licenses/lgpl-3.0.html LGPL-3.0
  */
 
@@ -18,17 +18,14 @@
  *
  */
 function mf_playerimages_db_connect_participations_db() {
-	global $zz_conf;
-	global $zz_setting;
-
-	mysqli_close($zz_conf['db_connection']);
-	$filename = $zz_setting['inc'].'/custom/zzwrap_sql/pwd-extern.json';
+	wrap_db_connection(false);
+	$filename = wrap_setting('inc').'/custom/zzwrap_sql/pwd-extern.json';
 	$db = json_decode(file_get_contents($filename), true);
-	$zz_conf['db_connection'] = mysqli_connect($db['db_host'], $db['db_user'], $db['db_pwd'], $db['db_name']);
+	if (empty($db['db_port'])) $db['db_port'] = NULL;
+	wrap_db_connection($db);
 
-	if (!$zz_conf['db_connection']) {
+	if (!wrap_db_connection())
 		wrap_error('Unable to establish database connection to main server.', E_USER_ERROR);
-	}
 }
 
 function mf_playerimages_set_iptc($image, $keywords){
