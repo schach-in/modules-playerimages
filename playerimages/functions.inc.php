@@ -22,10 +22,10 @@ function mf_playerimages_db_connect_participations_db() {
 	$filename = wrap_setting('inc').'/custom/zzwrap_sql/pwd-extern.json';
 	$db = json_decode(file_get_contents($filename), true);
 	if (empty($db['db_port'])) $db['db_port'] = NULL;
-	wrap_db_connection($db);
-
-	if (!wrap_db_connection())
+	$connection = wrap_db_connection($db);
+	if (!$connection)
 		wrap_error('Unable to establish database connection to main server.', E_USER_ERROR);
+	mysqli_select_db(wrap_db_connection(), $db['db_name']);
 }
 
 function mf_playerimages_set_iptc($image, $keywords){
