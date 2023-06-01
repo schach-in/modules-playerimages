@@ -16,6 +16,7 @@
 
 
 function mod_playerimages_make_playertag() {
+	wrap_setting('cache', false);
 	ini_set('max_execution_time', wrap_setting('playerimages_max_run_sec') + 20);
 
 	$locked = wrap_lock('playerimages_tag', 'sequential', wrap_setting('playerimages_max_run_sec') + 20);
