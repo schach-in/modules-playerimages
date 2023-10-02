@@ -176,7 +176,7 @@ function mod_playerimages_make_playermove() {
  * @return array
  */
 function mod_playerimages_make_playermove_dates($event_id) {
-	static $dates;
+	static $dates = [];
 	if (!empty($dates[$event_id])) return $dates[$event_id];
 
 	$sql = 'SELECT SUBSTRING_INDEX(foreign_key, "-", -3) AS date, object_id
@@ -198,7 +198,7 @@ function mod_playerimages_make_playermove_dates($event_id) {
  * @return int
  */
 function mod_playerimages_make_playermove_element($identifier) {
-	static $object_id;
+	static $object_id = [];
 	if (!empty($object_id[$identifier])) return $object_id[$identifier];
 
 	$sql = 'SELECT object_id
@@ -216,7 +216,7 @@ function mod_playerimages_make_playermove_element($identifier) {
  * @return int
  */
 function mod_playerimages_make_playermove_description($person_id) {
-	static $object_id;
+	static $object_id = [];
 	if (!empty($object_id[$person_id])) return $object_id[$person_id];
 
 	$sql = 'SELECT object_id
