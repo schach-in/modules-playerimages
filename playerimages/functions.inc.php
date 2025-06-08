@@ -8,7 +8,7 @@
  * https://www.zugzwang.org/modules/playerimages
  *
  * @author Gustaf Mossakowski <gustaf@koenige.org>
- * @copyright Copyright © 2020-2023 Gustaf Mossakowski
+ * @copyright Copyright © 2020-2023, 2025 Gustaf Mossakowski
  * @license http://opensource.org/licenses/lgpl-3.0.html LGPL-3.0
  */
 
@@ -19,7 +19,7 @@
  */
 function mf_playerimages_db_connect_participations_db() {
 	wrap_db_connection(false);
-	$filename = wrap_setting('inc').'/custom/zzwrap_sql/pwd-extern.json';
+	$filename = wrap_setting('inc').'/config/pwd-extern.json';
 	$db = json_decode(file_get_contents($filename), true);
 	if (empty($db['db_port'])) $db['db_port'] = NULL;
 	$connection = wrap_db_connection($db);
