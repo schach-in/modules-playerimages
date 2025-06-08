@@ -1,0 +1,19 @@
+# playerimages module
+# URLs or parts of URLs for which errors shall not be logged
+#
+# Part of »Zugzwang Project«
+# https://www.zugzwang.org/projects/playerimages
+#
+# @author Gustaf Mossakowski <gustaf@koenige.org>
+# @copyright Copyright © 2024 Gustaf Mossakowski
+# @license http://opensource.org/licenses/lgpl-3.0.html LGPL-3.0
+# 
+# begin = check if begin of string is identical; end = check end; all: check full
+#: errorcode	type	string
+#key 0 numeric
+
+# racing conditions
+php	string_regex	rename\(.+/players_incoming/.+,.+/players_error/.+\): Permission denied in .+/modules/playerimages/zzbrick_make/playertag.inc.php:.+
+
+# php-qrcode-detector-decoder library, not updated
+php	string_regex	Implicit conversion from float \d+\.\d+ to int loses precision in .+/library/php-qrcode-detector-decoder/lib/Common/HybridBinarizer.php:\d+
