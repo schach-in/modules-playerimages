@@ -8,7 +8,7 @@
  * https://www.zugzwang.org/modules/playerimages
  *
  * @author Gustaf Mossakowski <gustaf@koenige.org>
- * @copyright Copyright © 2020-2023 Gustaf Mossakowski
+ * @copyright Copyright © 2020-2023, 2025 Gustaf Mossakowski
  * @license http://opensource.org/licenses/lgpl-3.0.html LGPL-3.0
  */
 
@@ -102,7 +102,7 @@ function mod_playerimages_make_playermove() {
 		$values = [];
 		$values['action'] = 'insert';
 		$values['ids'] = ['objectrelations[0][parent_object_id]', 'objectrelations[0][relation_type_property_id]'];
-		$values['GET']['where']['category_id'] = wrap_id('categories', 'photo');
+		$values['GET']['where']['class_id'] = wrap_id('classes', 'photo');
 		$values['FILES']['field_uploaded_files_0_image']['name']['file'] = $file['filename_short'];
 		$values['FILES']['field_uploaded_files_0_image']['tmp_name']['file'] = $file['filename_full'];
 		$values['FILES']['field_uploaded_files_0_image']['do_not_delete']['file'] = true;
@@ -118,48 +118,37 @@ function mod_playerimages_make_playermove() {
 			wrap_unlock('playerimages_move');
 			return false;
 		}
-
-		$values = [];
-		$values['action'] = 'insert';
-		$values['ids'] = ['child_object_id', 'parent_object_id', 'relation_type_property_id'];
-		$values['POST']['child_object_id'] = $ops['id'];
-		$values['POST']['parent_object_id'] = mod_playerimages_make_playermove_description($on_pic['person_id']);
-		$values['POST']['relation_type_property_id'] = wrap_id('properties', 'relation_type/description');
-		$myops = zzform_multi('objectrelations', $values);
-		if (empty($myops['id'])) {
-			wrap_error(wrap_text('Could not link photo to person').': ID '.$ops['id'].' – File '
-				.$file['filename_short'].' – Values: '.json_encode($values).' – Error: '.json_encode($myops), E_USER_WARNING
-			);
+		$object_id = $ops['id'];
+		
+		$line = [
+			'child_object_id' => $object_id,
+			'parent_object_id' => mod_playerimages_make_playermove_description($on_pic['person_id']),
+			'relation_type_property_id' => wrap_id('properties', 'relation_type/description')
+		];
+		$id = zzform_insert('objectrelations', $line);
+		if (!$id) {
 			wrap_unlock('playerimages_move');
 			return false;
 		}
-
-		$values = [];
-		$values['action'] = 'insert';
-		$values['ids'] = ['child_object_id', 'parent_object_id', 'relation_type_property_id'];
-		$values['POST']['child_object_id'] = $ops['id'];
-		$values['POST']['parent_object_id'] = mod_playerimages_make_playermove_element($on_pic['event_identifier']);
-		$values['POST']['relation_type_property_id'] = wrap_id('properties', 'relation_type/element-inside');
-		$myops = zzform_multi('objectrelations', $values);
-		if (empty($myops['id'])) {
-			wrap_error(wrap_text('Could not link photo to website').': ID '.$ops['id'].' – File '
-				.$file['filename_short'].' – Values: '.json_encode($values).' – Error: '.json_encode($myops), E_USER_WARNING
-			);
+		
+		$line = [
+			'child_object_id' => $object_id,
+			'parent_object_id' => mod_playerimages_make_playermove_element($on_pic['event_identifier']),
+			'relation_type_property_id' => wrap_id('properties', 'relation_type/element-inside')
+		];
+		$id = zzform_insert('objectrelations', $line);
+		if (!$id) {
 			wrap_unlock('playerimages_move');
 			return false;
 		}
 		
 		// tags
-		$values = [];
-		$values['action'] = 'insert';
-		$values['ids'] = ['object_id', 'tag_id'];
-		$values['POST']['object_id'] = $ops['id'];
-		$values['POST']['tag_id'] = wrap_setting('playerimages_tag_id');
-		$myops = zzform_multi('objects-tags', $values);
-		if (empty($myops['id'])) {
-			wrap_error(wrap_text('Could not link photo to tag').': ID '.$ops['id'].' – File '
-				.$file['filename_short'].' – Values: '.json_encode($values).' – Error: '.json_encode($myops), E_USER_WARNING
-			);
+		$line = [
+			'object_id' => $object_id,
+			'tag_id' => wrap_setting('playerimages_tag_id')
+		];
+		$id = zzform_insert('objects-tags', $line);
+		if (!$id) {
 			wrap_unlock('playerimages_move');
 			return false;
 		}
